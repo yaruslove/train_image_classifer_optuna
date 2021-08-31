@@ -1,0 +1,1 @@
+nohup python3 main.py -d /disk/inference/cook_datasets/Yaroslav/seat_belt/4_join/ --name seat_belt --backbone resnet18 --path-save /disk/inference/cook_datasets/Yaroslav/seat_belt/Train/RESULT_OUT/ &
