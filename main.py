@@ -101,7 +101,6 @@ if __name__ == '__main__':
     else:
         device = args.device
         
-        
 ######## Create trail dir ########
     path_save=args.path_save
 #     path_save='/home/jovyan/train/seat_belt_validation/RESULT_OUT/'
@@ -123,8 +122,6 @@ if __name__ == '__main__':
     classes.sort()
     
     print(f'Classes : {classes}')
-    
-    
 
 ######## Upload model and weight ######## 
     if args.backbone == 'mobilenet_v2':
