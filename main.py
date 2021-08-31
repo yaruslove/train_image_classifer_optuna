@@ -188,7 +188,7 @@ if __name__ == '__main__':
         param_experiment['lr']=lr
         batch_size = trial.suggest_int("batch_size", 32, 256, step=16)
         param_experiment['batch_size']=batch_size
-        epochs= trial.suggest_int("epochs", 30, 140, step=10)
+        epochs= trial.suggest_int("epochs", 1, 1ß, step=1)
         param_experiment['epochs']=epochs
         for key, value in param_experiment.items():
             print(str(key)+"="+str(value))
@@ -305,18 +305,18 @@ if __name__ == '__main__':
         test_loss, test_acc = valid(model, test_dataloader, criteria, device)
         test_df = pd.DataFrame()
         reporter_test={}
-        reporter_test['Name_model']=namebest_model
+        reporter_test['Name best model by value_loss']=namebest_model
         reporter_test['test_loss']=test_loss
         reporter_test['test_acc']=test_acc
         test_df = test_df.append(reporter_test, ignore_index=True)
         test_df.to_csv(os.path.join(path_expirement,'result_test.csv'), sep='\t')
-        print('Test best model by valid value')
+        print('### Test best model by valid value: ###')
         for key, value in reporter_test.items():
             print(str(key)+"="+str(value))
-            
-        del df_experiment
+
         del reporter_df
         del test_df
+        print("Experiment finished, all epochs = {epochs} have done .".format(epochs))
         
         gc.collect()
                                
