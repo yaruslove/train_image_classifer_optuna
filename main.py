@@ -101,6 +101,7 @@ if __name__ == '__main__':
     else:
         device = args.device
         
+        
 ######## Create trail dir ########
     path_save=args.path_save
 #     path_save='/home/jovyan/train/seat_belt_validation/RESULT_OUT/'
@@ -122,6 +123,8 @@ if __name__ == '__main__':
     classes.sort()
     
     print(f'Classes : {classes}')
+    
+    
 
 ######## Upload model and weight ######## 
     if args.backbone == 'mobilenet_v2':
@@ -185,7 +188,7 @@ if __name__ == '__main__':
         param_experiment['lr']=lr
         batch_size = trial.suggest_int("batch_size", 32, 256, step=16)
         param_experiment['batch_size']=batch_size
-        epochs= trial.suggest_int("epochs", 1, 1ß, step=1)
+        epochs= trial.suggest_int("epochs", 30, 140, step=10)
         param_experiment['epochs']=epochs
         for key, value in param_experiment.items():
             print(str(key)+"="+str(value))
@@ -313,7 +316,7 @@ if __name__ == '__main__':
 
         del reporter_df
         del test_df
-        print("Experiment finished, all epochs = {epochs} have done .".format(epochs))
+        print("Experiment finished, all epochs = {} have done .".format(epochs))
         
         gc.collect()
                                
