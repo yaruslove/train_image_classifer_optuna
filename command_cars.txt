@@ -1,0 +1,4 @@
+nohup python3 main.py -d /disk/inference/cook_datasets/Yaroslav/seat_belt/4_join/ --name seat_belt --backbone resnet18 --path-save /disk/inference/cook_datasets/Yaroslav/seat_belt/Train/RESULT_OUT/ &
+
+
+python3 main.py -d /home/msi/Документы/project/car_classification/data/TRAIN_SESSION/ --name cars_classific --backbone resnet18 --path-save /home/msi/Документы/project/car_classification/RESULT_OUT/ --notest-set
