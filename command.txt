@@ -1,1 +1,1 @@
-nohup python3 main.py -d /disk/inference/cook_datasets/Yaroslav/seat_belt/4_join/ --name seat_belt --backbone resnet18 --path-save /disk/inference/cook_datasets/Yaroslav/seat_belt/Train/RESULT_OUT/ &
+nohup python3 main.py -d /home/jovyan/data/lying_down/ --name lying_ornot --backbone resnet18 --path-save /home/jovyan/train/lying_down/new_optuna_train_classifer-main/RESULTS/ --n_trials 50 --resolush 336  &

@@ -19,7 +19,7 @@ from tqdm import tqdm
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
-#from torch.utils.tensorboard import SummaryWriter
+from torch.utils.tensorboard import SummaryWriter
 from torch.cuda.amp import GradScaler, autocast
 from sklearn.metrics import accuracy_score
 
@@ -87,13 +87,14 @@ if __name__ == '__main__':
     parser.add_argument('--save-best', type=int, default=3)
     parser.add_argument('--resolush', type=int, default=224)
     parser.add_argument('--device', type=str, default=None)
-    parser.add_argument('--num-workers', type=int, default=15)
+    parser.add_argument('--num-workers', type=int, default=16)
     parser.add_argument('--notest-set', action='store_true') #  point up if have no test data set (if hand over  "--notest-set" it become True otherwise False)
-
+    parser.add_argument('--n_trials', type=int, default=15) # amount of trials (колличество экспериментов)
     
     args = parser.parse_args()
     resolush = int(args.resolush)
     notest_set=args.notest_set
+    n_trials=args.n_trials
     
 
     best_valid_loss = float('inf')
@@ -227,13 +228,13 @@ if __name__ == '__main__':
 
         ############  Selection Hyper Parametrs  ############
         param_experiment={}
-        step=1e-4
-        lr = trial.suggest_float("lr", 1e-4, 1e-2, step=step)
+        step=1e-6
+        lr = trial.suggest_float("lr", 1e-6, 1e-4, step=step)
         lr=round(lr, len(str(step)))
         param_experiment['lr']=lr
-        batch_size = trial.suggest_int("batch_size", 32, 128, step=16)
+        batch_size = trial.suggest_int("batch_size", 32, 512, step=32)
         param_experiment['batch_size']=int(batch_size)
-        epochs= trial.suggest_int("epochs", 20, 120, step=10)
+        epochs= trial.suggest_int("epochs", 40, 120, step=10)
         param_experiment['epochs']=epochs
         param_experiment['resolush']=resolush
         for key, value in param_experiment.items():
@@ -244,8 +245,13 @@ if __name__ == '__main__':
         def id_generator(size=8, chars=string.ascii_lowercase + string.digits):
             rng = random.Random(int(str(datetime.datetime.now())[-6:]))
             return ''.join(rng.choice(chars) for _ in range(size))
-        str_params='_btach='+str(batch_size)+'_lr='+str(lr)+'_epochs='+str(epochs)
-        path_expirement=os.path.join(path_allresult,id_generator()+str_params)
+        
+        hash_exprmnt=id_generator()
+        param_experiment['hash_exprmnt']=hash_exprmnt
+        str_params=hash_exprmnt+'_batch='+str(batch_size)+'_lr='+str(lr)+'_epochs='+str(epochs)+"_resolush="+str(resolush)
+        
+        
+        path_expirement=os.path.join(path_allresult,str_params)
         os.mkdir(path_expirement)
         
         ############  Write Hyper-parametrs in csv file   ############        
@@ -272,10 +278,11 @@ if __name__ == '__main__':
                                             total_steps = TOTAL_STEPS)
 
         criteria = nn.CrossEntropyLoss()
-        scaler = GradScaler()
+        # scaler = GradScaler()
         
         ######## Info about experemets ########
         reporter_df = pd.DataFrame()
+
         
 ############  Процесс тренировки ############
         for e in tqdm(range(epochs)):
@@ -301,10 +308,11 @@ if __name__ == '__main__':
                 out = torch.argmax(out, dim=1)
                 avg_acc += accuracy_score(labels.int().flatten().cpu(), out.int().flatten().cpu())
 
-                scaler.scale(loss).backward()
-                scaler.step(optimizer)
+                
+                loss.backward()
+                optimizer.step()
                 scheduler_lr.step()
-                scaler.update()
+
             train_loss, train_acc=round(avg_loss / len(train_dataloader), 3) , round(avg_acc  / len(train_dataloader), 3)
             reporter['Epoch']=int(e)
             reporter['train_loss']=train_loss
@@ -313,6 +321,8 @@ if __name__ == '__main__':
     ############  Add param (lr,batch ..) to reporter ############             
             for param_key, param_value in param_experiment.items():
                 reporter[param_key]=param_value
+            reporter['lr_current']=optimizer.param_groups[0]["lr"]
+            
             
     ############  Процесс валидации ############       
             model.eval()
@@ -321,10 +331,14 @@ if __name__ == '__main__':
             name_pmodel='checkpoint_'+str(e).zfill(4)+'.pth'
             reporter['Name_model']=name_pmodel
             
+            ############ Tensor board ############
+            writer.add_scalars('Loss_value', {'Train_'+str_params: train_loss, 'Valid_'+str_params: valid_loss}, e)
+            
             end = time.time()
             reporter['valid_loss']=valid_loss
             reporter['valid_acc']=valid_acc
             reporter['time']=round((end - start), 2)
+            
 
     ############  Exec test on each epoch ############ 
             exec_test=False # Заглушка      
@@ -394,5 +408,12 @@ if __name__ == '__main__':
                                
         return valid_loss_best_min
     
+    # Tensor board
+    summarize_results=path_allresult+"/summarize_results"
+    if not os.path.exists(summarize_results):
+        os.makedirs(summarize_results)
+    writer = SummaryWriter(log_dir=summarize_results, flush_secs=1)
+    
+    # main_func
     study = optuna.create_study(study_name="pytorch_checkpoint",direction="minimize") # "maximize"
-    study.optimize(objective, n_trials=15)
+    study.optimize(objective, n_trials=n_trials)
