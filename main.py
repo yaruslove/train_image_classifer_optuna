@@ -28,6 +28,7 @@ from backbones.mobilenet_v2 import mobilenet_v2
 from backbones.mobilenetv3_pytorch import mobilenet_v3_large
 from backbones.mobilenetv3_pytorch import mobilenet_v3_small
 from backbones import resnet
+from backbones import efficientnet
 from backbones import mobilenetv3
 
 from utils.dataloader import DS
@@ -82,7 +83,7 @@ if __name__ == '__main__':
     parser.add_argument('--path-save', type=str, required=True)
 
     parser.add_argument('-bb', '--backbone', type=str, default='resnet34',
-                        choices=['mobilenet_v3_large','mobilenet_v3_small','mobilenet_v2', 'resnet18', 'resnet34', 'resnet50'])
+                        choices=['mobilenet_v3_large','mobilenet_v3_small','mobilenet_v2', 'resnet18', 'resnet34', 'resnet50', 'efficientnet_b0', 'efficientnet_b1', 'efficientnet_b2'])
     parser.add_argument('--classes', type=str, nargs='*', default=None)
     parser.add_argument('--save-best', type=int, default=3)
     parser.add_argument('--resolush', type=int, default=224)
@@ -147,12 +148,24 @@ if __name__ == '__main__':
         model = mobilenet_v3_small()
         model.load_state_dict(torch.load('./pretrain_weight/mobilenet_v3_small-047dcff4.pth'))
         model.classifier[3]=nn.Linear(model.classifier[3].in_features, len(classes))
-    else:
+    elif args.backbone in ['efficientnet_b0', 'efficientnet_b1', 'efficientnet_b2']:
+        model = efficientnet.__dict__[args.backbone](pretrained=False)
+        model.load_state_dict(torch.load('./pretrain_weight/efficientnet_b0_rwightman-3dd342df.pth'))
+        print(model.classifier[1])
+        print(type(model.classifier[1]))
+        model.classifier[1]=nn.Linear(in_features=1280, out_features=len(classes), bias=True)
+        print(model.classifier[1])
+        print(type(model.classifier[1]))
+        # model.fc = nn.Linear(model.fc.in_features, len(classes))
+    elif args.backbone in ['resnet18', 'resnet34', 'resnet50']:
         model = resnet.__dict__[args.backbone](pretrained=False)
         model.load_state_dict(torch.load('./pretrain_weight/resnet18-5c106cde.pth'))
         model.fc = nn.Linear(model.fc.in_features, len(classes))
-#         device  = torch.device('cuda:1')
-#         model = nn.DataParallel(model,device_ids = [0,1])
+
+    # else:
+    #     model = resnet.__dict__[args.backbone](pretrained=False)
+    #     model.load_state_dict(torch.load('./pretrain_weight/resnet18-5c106cde.pth'))
+    #     model.fc = nn.Linear(model.fc.in_features, len(classes))
 
 
     model.to(device)
@@ -229,12 +242,13 @@ if __name__ == '__main__':
         ############  Selection Hyper Parametrs  ############
         param_experiment={}
         step=1e-6
-        lr = trial.suggest_float("lr", 1e-6, 1e-4, step=step)
+        lr = trial.suggest_float("lr", 1e-6, 1e-2, step=step)
         lr=round(lr, len(str(step)))
         param_experiment['lr']=lr
-        batch_size = trial.suggest_int("batch_size", 32, 512, step=32)
+        batch_size = trial.suggest_int("batch_size", 64, 512, step=64)
         param_experiment['batch_size']=int(batch_size)
-        epochs= trial.suggest_int("epochs", 40, 120, step=10)
+        # epochs= trial.suggest_int("epochs", 40, 120, step=10)
+        epochs=80
         param_experiment['epochs']=epochs
         param_experiment['resolush']=resolush
         for key, value in param_experiment.items():
