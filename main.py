@@ -28,6 +28,7 @@ from backbones.mobilenet_v2 import mobilenet_v2
 from backbones.mobilenetv3_pytorch import mobilenet_v3_large
 from backbones.mobilenetv3_pytorch import mobilenet_v3_small
 from backbones import resnet
+from backbones import regnet
 from backbones import efficientnet
 from backbones import mobilenetv3
 
@@ -83,7 +84,10 @@ if __name__ == '__main__':
     parser.add_argument('--path-save', type=str, required=True)
 
     parser.add_argument('-bb', '--backbone', type=str, default='resnet34',
-                        choices=['mobilenet_v3_large','mobilenet_v3_small','mobilenet_v2', 'resnet18', 'resnet34', 'resnet50', 'efficientnet_b0', 'efficientnet_b1', 'efficientnet_b2'])
+                        choices=['mobilenet_v3_large','mobilenet_v3_small','mobilenet_v2', 
+                                 'resnet18', 'resnet34', 'resnet50',
+                                 'efficientnet_b0', 'efficientnet_b1', 'efficientnet_b2',
+                                'regnet_x_400mf','regnet_x_800mf','regnet_x_1_6gf','regnet_x_3_2gf'])
     parser.add_argument('--classes', type=str, nargs='*', default=None)
     parser.add_argument('--save-best', type=int, default=3)
     parser.add_argument('--resolush', type=int, default=224)
@@ -151,21 +155,16 @@ if __name__ == '__main__':
     elif args.backbone in ['efficientnet_b0', 'efficientnet_b1', 'efficientnet_b2']:
         model = efficientnet.__dict__[args.backbone](pretrained=False)
         model.load_state_dict(torch.load('./pretrain_weight/efficientnet_b0_rwightman-3dd342df.pth'))
-        print(model.classifier[1])
-        print(type(model.classifier[1]))
-        model.classifier[1]=nn.Linear(in_features=1280, out_features=len(classes), bias=True)
-        print(model.classifier[1])
-        print(type(model.classifier[1]))
-        # model.fc = nn.Linear(model.fc.in_features, len(classes))
+        model.classifier[1]=nn.Linear(in_features=model.classifier[1].in_features, out_features=len(classes), bias=True)
+    elif args.backbone in ['regnet_x_400mf','regnet_x_800mf','regnet_x_1_6gf','regnet_x_3_2gf']:
+        model = regnet.__dict__[args.backbone](pretrained=False)
+        model.load_state_dict(torch.load('./pretrain_weight/regnet_x_400mf-adf1edd5.pth'))
+        model.fc = nn.Linear(model.fc.in_features, out_features=len(classes), bias=True)
     elif args.backbone in ['resnet18', 'resnet34', 'resnet50']:
         model = resnet.__dict__[args.backbone](pretrained=False)
         model.load_state_dict(torch.load('./pretrain_weight/resnet18-5c106cde.pth'))
         model.fc = nn.Linear(model.fc.in_features, len(classes))
 
-    # else:
-    #     model = resnet.__dict__[args.backbone](pretrained=False)
-    #     model.load_state_dict(torch.load('./pretrain_weight/resnet18-5c106cde.pth'))
-    #     model.fc = nn.Linear(model.fc.in_features, len(classes))
 
 
     model.to(device)
