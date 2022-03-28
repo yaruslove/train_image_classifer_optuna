@@ -507,7 +507,6 @@ class EfficientNet(nn.Module):
 
     def _forward_impl(self, x: Tensor) -> Tensor:
         x = self.features(x)
-
         x = self.avgpool(x)
         x = torch.flatten(x, 1)
 
