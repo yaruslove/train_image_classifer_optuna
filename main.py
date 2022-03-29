@@ -213,7 +213,7 @@ if __name__ == '__main__':
                     test_images.append(t)
                     
 ######## Create Dataset ########
-    train_dataset = DS(train_images, classes=classes,resolush=resolush)
+    train_dataset = DS(train_images, classes=classes, use_albu=True, resolush=resolush)
     valid_dataset = DS(valid_images, classes=classes, use_albu=False, resolush=resolush)
 
     
@@ -244,10 +244,10 @@ if __name__ == '__main__':
         lr = trial.suggest_float("lr", 1e-6, 1e-2, step=step)
         lr=round(lr, len(str(step)))
         param_experiment['lr']=lr
-        batch_size = trial.suggest_int("batch_size", 64, 512, step=64)
+        batch_size = trial.suggest_int("batch_size", 32, 2048, step=32)
         param_experiment['batch_size']=int(batch_size)
-        # epochs= trial.suggest_int("epochs", 40, 120, step=10)
-        epochs=80
+        epochs= trial.suggest_int("epochs", 20, 120, step=20)
+        # epochs=80
         param_experiment['epochs']=epochs
         param_experiment['resolush']=resolush
         for key, value in param_experiment.items():
@@ -303,9 +303,11 @@ if __name__ == '__main__':
             reporter={} # For keep information loss, accuracy for each epoch
             start = time.time()
             model.train()
-
-            avg_loss = 0
-            avg_acc=0
+         
+            train_loss=[]
+            
+            label_true=[]
+            label_pred=[]
 
             for idx, (imgs, labels) in enumerate(train_dataloader):
                 optimizer.zero_grad()
@@ -317,16 +319,25 @@ if __name__ == '__main__':
                     out = model(imgs)
                     loss = criteria(out, labels)
 
-                avg_loss += round(loss.item(), 3)
                 out = torch.argmax(out, dim=1)
-                avg_acc += accuracy_score(labels.int().flatten().cpu(), out.int().flatten().cpu())
-
+                
+                train_loss=train_loss+[round(loss.item(), 3)]*len(labels)
+                
+                label_true=label_true+labels.int().flatten().cpu().tolist()
+                label_pred=label_pred+out.int().flatten().cpu().tolist()
                 
                 loss.backward()
                 optimizer.step()
                 scheduler_lr.step()
 
-            train_loss, train_acc=round(avg_loss / len(train_dataloader), 3) , round(avg_acc  / len(train_dataloader), 3)
+
+            train_loss=sum(train_loss) / len(train_loss)
+            train_acc=accuracy_score(label_true, label_pred)
+            # print("train_loss", train_loss)
+            # print("train_acc",  train_acc)
+            
+            print(" ")
+            
             reporter['Epoch']=int(e)
             reporter['train_loss']=train_loss
             reporter['train_acc']=train_acc
@@ -422,7 +433,7 @@ if __name__ == '__main__':
         return valid_loss_best_min
     
     # Tensor board
-    summarize_results=path_allresult+"/summarize_results"
+    summarize_results=path_allresult+"/summarize_tensorboard"
     if not os.path.exists(summarize_results):
         os.makedirs(summarize_results)
     writer = SummaryWriter(log_dir=summarize_results, flush_secs=1)

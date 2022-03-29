@@ -9,8 +9,10 @@ def valid(model: nn.Module,
          criteria: nn.Module,
          device: str) -> float:
 
-    avg_loss = 0
-    avg_acc = 0
+    valid_loss=[]
+
+    label_true=[]
+    label_pred=[]
     model.eval()
 
     for i, (imgs, labels) in enumerate(dataloader):
@@ -22,7 +24,13 @@ def valid(model: nn.Module,
             loss = criteria(out, labels)
 
         out = torch.argmax(out, dim=1)
-        avg_loss += round(loss.item(), 3)
-        avg_acc += accuracy_score(labels.int().flatten().cpu(), out.int().flatten().cpu())
+        
+        valid_loss=valid_loss+[round(loss.item(), 3)]*len(labels)
 
-    return round(avg_loss / len(dataloader), 3), round(avg_acc  / len(dataloader), 3)
+        label_true=label_true+labels.int().flatten().cpu().tolist()
+        label_pred=label_pred+out.int().flatten().cpu().tolist()
+        
+    valid_loss=sum(valid_loss) / len(valid_loss)
+    valid_acc=accuracy_score(label_true, label_pred)
+    
+    return valid_loss, valid_acc
