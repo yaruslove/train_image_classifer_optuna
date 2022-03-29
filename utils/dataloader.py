@@ -1,7 +1,6 @@
 import os
 import random
 from typing import Tuple
-import glob
 import numpy as np
 import glob
 
@@ -31,6 +30,30 @@ class DS(Dataset):
 
     def __getitem__(self, idx: int) -> Tuple[Tensor, Tensor]:
         img = Image.open(self.images[idx]).convert('RGB')
+
+        if self.use_albu:
+            img = torchvision.transforms.RandomGrayscale(p=0.5)(img)
+            img = torchvision.transforms.RandomHorizontalFlip(p=0.5)(img)
+            img = torchvision.transforms.RandomVerticalFlip(p=0.5)(img)
+            img = torchvision.transforms.ColorJitter(brightness=0.4, contrast=0.2, saturation=0, hue=0)(img)
+            sluch=(random.randint(0, 7))
+            if sluch==0:
+                img =torchvision.transforms.transforms.Pad(15,fill=1, padding_mode='edge')(img)
+            elif sluch==1:
+                img =torchvision.transforms.RandomPerspective(distortion_scale=0.4)(img)
+            elif sluch==0:
+                img = torchvision.transforms.RandomAffine(degrees=45, scale=(0.6, 0.9), shear=30)(img)
+            elif sluch==3:
+                img =torchvision.transforms.transforms.Pad(20,fill=1, padding_mode='symmetric')(img)
+            elif sluch==4:
+                img =torchvision.transforms.RandomRotation(40, expand=True, center=None, fill=0, resample=None)(img)
+            elif sluch==5:
+                img =torchvision.transforms.transforms.Pad(12,fill=1, padding_mode='reflect')(img)
+            elif sluch==6:
+                img =torchvision.transforms.GaussianBlur(3, sigma=(0.1, 2))(img)
+            elif sluch==7:
+                img =torchvision.transforms.RandomRotation(degrees=(0, 70), expand=False)(img)
+
         img = torchvision.transforms.Resize((self.resolush, self.resolush))(img)
         img = torchvision.transforms.ToTensor()(img)
         img = torchvision.transforms.Normalize(
