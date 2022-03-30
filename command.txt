@@ -1,4 +1,8 @@
-nohup python3 main.py -d /media/msi/Silicon/project/person_lying_down/data_set/trranning_sessions/№2_feb_24_2022/ --name lying_ornot --backbone mobilenet_v3_large --path-save /media/msi/Silicon/project/person_lying_down/Scripts/train_image_classifer_optuna/RESULTS/ --n_trials 100 --resolush 224 &
+nohup python3 main.py -d /home/jovyan/data/lying_down/ --name lying_ornot --backbone resnet18 --path-save /home/jovyan/train/lying_down/train_image_classifer_optuna-master/RESULTS/ --n_trials 120 --resolush 224 &
+
+
+
+
 
 
 python3 test_inference.py  \
@@ -10,3 +14,7 @@ python3 test_inference.py  \
 
 
 pip3 install torch==1.10.2+cu113 torchvision==0.11.3+cu113 -f https://download.pytorch.org/whl/cu113/torch_stable.html
+
+
+
+python3 train_validation.py -d /home/jovyan/data/lying_down/ -p "/home/jovyan/train/lying_down/train_image_classifer_optuna-master/RESULTS/lying_ornot_2022-03-29_17-35-34_resnet18/z6jxs9na_batch=1344_lr=0.00082_epochs=350_resolush=224/param_expirement.csv" --path-save /home/jovyan/train/lying_down/train_image_classifer_optuna-master/RESULTS_valid/

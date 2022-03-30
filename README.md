@@ -65,5 +65,31 @@ Example ***path_allresult***:
 ```
 
 
+# Train for validation для воспроизв рез-ов валидатором
+## train_validation.py
+```
+python3 train_validation.py 
+-d /home/jovyan/data/lying_down/  \
+-p "/home/jovyan/train_classifer_optuna/RESULTS/lying_ornot_2022-03-29_17-35-34_resnet18/z6jxs9na_batch=1344_lr=0.00082_epochs=350_resolush=224/param_expirement.csv" \  
+--path-save /home/RESULTS_valid/
+```
+
+-p --param =  
+```
+    {'lr': 0.00082,
+ 'batch_size': 1344.0,
+ 'epochs': 350.0,
+ 'resolush': 224.0,
+ 'backbone': 'resnet18',
+ 'hash_exprmnt': 'z6jxs9na'}
+```
+
+Скрипт копирует эти параметры и начинает тренировку  
+
+--path-save  -  куда сохранять
 
 
+
+# Test_validation.ipynb
+
+Для тестирования текущей модели все внтури
